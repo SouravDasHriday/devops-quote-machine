@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DevOps Quote Machine</title>
+    <style>
+        body { font-family: sans-serif; background-color: #2c3e50; color: #ecf0f1; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        #quote-box { background-color: #34495e; padding: 40px; border-radius: 10px; max-width: 600px; }
+        h1 { color: #1abc9c; }
+        p { font-size: 1.5em; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div id="quote-box">
+        <h1>DevOps Quote Machine</h1>
+        <p id="quote-text">Loading...</p>
+        <button onclick="getNewQuote()">Get New Quote</button>
+    </div>
+
+    <script>
+        async function getNewQuote() {
+            document.getElementById('quote-text').innerText = 'Fetching...';
+            const response = await fetch('/api/quote');
+            const data = await response.json();
+            document.getElementById('quote-text').innerText = `"${data.quote}"`;
+        }
+        // Load the first quote when the page opens
+        window.onload = getNewQuote;
+    </script>
+</body>
+</html>
