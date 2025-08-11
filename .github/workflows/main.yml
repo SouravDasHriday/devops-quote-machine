@@ -1,0 +1,67 @@
+# Name for our pipeline
+name: Build and Deploy DevOps Quote Machine
+
+# Trigger: Run this pipeline on a push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Define the jobs to run
+jobs:
+  #################################
+  # CONTINUOUS INTEGRATION (CI) JOB
+  #################################
+  build:
+    # Use an Ubuntu Linux virtual machine to run the job
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Get the source code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Set up the correct version of Node.js to match Azure
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22' # <-- This matches the "Node 22 LTS" you chose in Azure
+
+      # 3. Install the application's dependencies (the "build" step)
+      - name: Install Dependencies
+        run: npm install
+
+      # 4. Package the working application into an 'artifact'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: node-app-artifact
+          path: . 
+
+  ####################################
+  # CONTINUOUS DEPLOYMENT (CD) JOB
+  ####################################
+  deploy:
+    # This job will only run after the 'build' job succeeds
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download the ready-to-deploy package from the build job
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: node-app-artifact
+
+      # 2. Log in to Azure using the secret you have already configured
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 3. Deploy the package to your Azure Web App
+      - name: Deploy to Azure WebApp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'sd-quote-machine' # <-- IMPORTANT: This is your app name from Azure
+          package: .
